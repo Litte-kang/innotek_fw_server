@@ -1,4 +1,5 @@
 var restify = require('restify');
+var fs = require('fs');
 var remoteCmd = require('./remote_cmd');
 var command = require('./command');
 
