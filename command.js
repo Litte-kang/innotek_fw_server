@@ -1,6 +1,6 @@
 var mongoose = require('./config');
 var events = require('events');
-var event = events.EventEmitter();
+var event = new events.EventEmitter();
 
 var Schema = mongoose.Schema;
 

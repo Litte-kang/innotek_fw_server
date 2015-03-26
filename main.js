@@ -44,11 +44,9 @@ httpServer.post({path:'/fw'}, function(req, res, next){
 	
 	fwInfo = JSON.parse(req.body);
 	
-	console.log(address);
+	var cmdInfo = remoteCmd.makeFwUpdateCmd(fwInfo.midAddress, fwInfo.address, fwInfo.fwSize, fwInfo.fwVersion, fwInfo.fwType);
 	
-	var cmdInfo = remoteCmd.makeFwUpdateCmd(fwInfo.midAdress, fwInfo.address, fwInfo.fwSize, fwInfo.fwVersion, fwInfo.fwType);
-	
-	command.addCommand({midAddress:fwInfo.midAdress, address:fwInfo.address}, cmdInfo);
+	command.addCommand({midAddress:fwInfo.midAddress, address:fwInfo.address}, {midAddress:fwInfo.midAddress, address:fwInfo.address, infoType:4, command:cmdInfo});
 		
 	command.Event.once('save_suc', function(){
 	
