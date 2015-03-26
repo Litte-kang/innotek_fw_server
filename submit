@@ -1,0 +1,6 @@
+#!/bin/bash
+
+git add . -A
+git commit -m "innotek web server"
+git remote add origin git@github.com:Litte-kang/innotek_web_server.git
+git push -u origin master

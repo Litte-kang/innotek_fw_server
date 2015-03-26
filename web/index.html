@@ -1,0 +1,88 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Language" content="zh-cn">
+<META HTTP-EQUIV="Cache-Control" CONTENT="no-store, must-revalidate"> 
+<title>固件升级</title>
+<style type="text/css">
+</style>
+</head>
+
+<table width="500" border="1" align="center">
+  <tr>
+    <td>中间件ID</td>
+    <td>自控仪地址</td>
+    <td>固件大小</td>
+    <td>固件版本</td>
+    <td>固件类型</td>
+  </tr>
+  <tr>
+    <td><input name="midId" type="text" id="midId" value="0000000000" size="10"></td>
+    <td><input name="slaveAddress" type="text" id="slaveAddress" value="65535" size="10"></td>
+    <td><input name="fwSize" type="text" id="fwSize" value="0" size="10"></td>
+    <td><input name="fwVersion" type="text" id="fwVersion" value="000" size="10"></td>
+    <td><input name="fwType" type="text" id="fwType" value="0" size="10"></td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td><input name="submit2" id="sumbit2" type="button" class="MyButton" onClick="buttonEvt(this)" value="提交"></td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+
+function buttonEvt(btn)
+{
+	var data = "";
+	var path = "";
+	var jsonStr = "";
+		
+	if ("sumbit2" == btn.id)
+	{
+		jsonStr = 
+		"{" +
+		'"midAddress":' + '"' + document.getElementById('midId').value + '"' + "," +
+		'"address":' + '"' + document.getElementById('slaveAddress').value + '"' + "," +
+		'"fwSize":' + document.getElementById('fwSize').value + "," + 
+		'"fwVersion":' + '"' + document.getElementById('fwVersion').value + '"' + "," +
+		'"fwType":' + document.getElementById('fwType').value 
+		+ "}";
+
+		path = "fw";
+	}
+	
+	if (path)
+	{
+		sendHttpReq("POST", path, jsonStr);
+	}
+}
+
+function createXmlHttpRequest()
+{
+	if (window.ActiveXObject)
+	{
+		return new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	else if (window.XMLHttpRequest)
+	{
+		return new XMLHttpRequest();
+	}
+}
+
+function sendHttpReq(method, url, data)
+{
+	var http_request = createXmlHttpRequest();
+		
+	http_request.open(method, url, false);
+	http_request.setRequestHeader('Content-Type', 'text/plain');
+	http_request.send(data);
+	
+	return http_request.responseText;
+}
+
+</script>
+
+</html>
