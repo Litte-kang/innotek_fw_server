@@ -14,22 +14,30 @@ module.exports.makeConfigCurveCmd = function makeConfigCurveCmd(midwareID, targe
 	{
 		type:12,
 		address:midwareID,
-		data:[0,0,0,0,0]
+		data:[]
 	};
-	var dryObj = {dryBulbCurve:[0]};
-	var wetObj = {wetBulbCurve:[0]};
-	var timeObj = {timeCurve:[0]};
+	var tmp = 0;
+	var i = 0
 
-	json.data[0] = ((targetID >> 8) & 0x00ff);
-	json.data[1] = (targetID & 0x00ff);
+	json.data.push(((targetID >> 8) & 0x00ff));
+	json.data.push((targetID & 0x00ff));
 
-	dryObj.dryBulbCurve = dryBulbCurveValue;
-	wetObj.wetBulbCurve = wetBulbCurveValue;
-	timeObj.timeCurve = timeCurveValue;
+	for (i = 0; i < 10; ++i)
+	{
+		json.data.push(dryBulbCurveValue[i]);
+	}
 
-	json.data[2] = dryObj;
-	json.data[3] = wetObj;
-	json.data[4] = timeObj;
+	for (i = 0; i < 10; ++i)
+	{
+		tmp = wetBulbCurveValue[i] * 10;
+		json.data.push(((tmp >> 8) & 0x00ff));
+		json.data.push((tmp & 0x00ff));
+	}
+
+	for (i = 0; i < 19; ++i)
+	{
+		json.data.push(timeCurveValue[i]);
+	}
 	
 	return json;
 }
@@ -48,7 +56,7 @@ module.exports.makeConfigTobaSizeCmd = function makeConfigTobaSizeCmd(midwareID,
 	{
 		type:13,
 		address:midwareID,
-		data:[0,0,0,0]
+		data:[]
 	};
 
 	json.data[0] = ((targetID >> 8) & 0x00ff);
@@ -74,7 +82,7 @@ module.exports.makeSearchStatusCmd = function makeSearchStatusCmd(midwareID, tar
 	{
 		type:8,
 		address:midwareID,
-		data:[0,0,0]
+		data:[]
 	};
 
 	json.data[0] = ((targetID >> 8) & 0x00ff);
@@ -101,15 +109,21 @@ module.exports.makeFwUpdateCmd = function makeFwUpdateCmd(midwareID, targetID, f
 	{
 		type:4,
 		address:midwareID,
-		data:[0,0,0,0,0]
+		data:[]
 	};
 	
-	json.data[0] = fwSize;
-	json.data[1] = fwVersion;
-	json.data[2] = fwType;
-
-	json.data[3] = ((targetID >> 8) & 0x00ff);
-	json.data[4] = (targetID & 0x00ff);
+	json.data[0] = ((targetID >> 8) & 0x00ff);
+	json.data[1] = (targetID & 0x00ff);
+	
+	json.data[2] = (fwSize >> 24) & 0x00ff;
+	json.data[3] = (fwSize >> 16) & 0x00ff;
+	json.data[4] = (fwSize >> 8)  & 0x00ff;
+	json.data[5] = fwSize & 0x00ff;
+	
+	json.data[6] = (fwVersion >> 8) & 0x00ff;
+	json.data[7] = (fwVersion & 0x00ff);
+	
+	json.data[8] = fwType;
 
 	return json;
 }
@@ -128,7 +142,7 @@ module.exports.makeConfigCurvePhaseCmd = function makeConfigCurvePhaseCmd(midwar
 	{
 		type:16,
 		address:midwareID,
-		data:[0,0,0,0]
+		data:[]
 	};
 
 	json.data[0] = ((targetID >> 8) & 0x00ff);
