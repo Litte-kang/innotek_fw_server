@@ -14,34 +14,61 @@
 <div id="dev_type_table"></div>
 </div>
 
+<div id="msg_dialog">
+	<div id="msg_dialog_title"></div></br>
+	<table id="version_table" width="500">
+		<input type="radio" name="version" onClick="Version='001'" />0.0.1 
+		<input type="radio" name="version" onClick="Version='002'" />0.0.2
+		<input type="radio" name="version" onClick="Version='003'" checked="checked" />0.0.3
+		</br>
+		</br>
+	</table>
+	<div align="right">
+		<input name="okButton" type="button" id="okButton" onClick="buttonEvt(this)" value="确定" />
+		<input name="cancelButton" type="button" id="cancelButton" onClick="buttonEvt(this)" value="取消" />
+	</div>
+</div>
+
 <div id="display"></div>
+
+<script src="js/my_http.js"></script>
 <script type="text/javascript">
 
 ///*
 var DeviceInfos;
-var DevInfoCheckboxTrueSum = 0;
+var Version = "003";
+var DevInfoCheckboxTrueSum 	= 0;
+var Cmd 					= 0;
 
-function createXmlHttpRequest()
+function updateAction()
 {
-	if (window.ActiveXObject)
-	{
-		return new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	else if (window.XMLHttpRequest)
-	{
-		return new XMLHttpRequest();
-	}
-}
+	var i 			= 0;
+	var slaveId 	= [];
+	var hostId 		= 0;
 
-function sendHttpReq(method, url, data)
-{
-	var http_request = createXmlHttpRequest();
+	hostId = DeviceInfos[0]["hostId"];
+
+	Cmd = '{"fwType":' + DeviceInfos[0]["myDeviceType"] + ',"hostId":"' + hostId + '","slaveId":[';
+
+	for (i = 0; i < DeviceInfos.length; ++i)
+	{
+		var id;	
 		
-	http_request.open(method, url, false);
-	http_request.setRequestHeader('Content-Type', 'text/plain');
-	http_request.send(data);
-	
-	return http_request.responseText;
+		id = "000" + i;
+		id = id.substring(id.length - 3);
+
+		if (document.getElementById(("dev_info_checkbox_" + id)).checked)
+		{
+			//slaveId.push(document.getElementById((id + "_001")).innerHTML);
+			slaveId.push(('"' + DeviceInfos[i]["myId"] + '"'));
+		}
+	}
+
+	Cmd = Cmd + slaveId + '],';
+
+	document.getElementById("msg_dialog").style.display = "block";
+
+	document.getElementById("display").innerHTML = Cmd;
 }
 
 function buttonEvt(btn)
@@ -58,28 +85,35 @@ function buttonEvt(btn)
 	}
 	else if ("updateButton" == btn.id)
 	{
-		updateAction();
-	}
-}
-function updateAction()
-{
-	var i = 0;
-	var tmp = '';
-
-	for (i = 0; i < DeviceInfos.length; ++i)
-	{
-		var id;	
-		
-		id = "000" + i;
-		id = id.substring(id.length - 3);
-
-		if (document.getElementById(("dev_info_checkbox_" + id)).checked)
+		if (0 < DevInfoCheckboxTrueSum)
 		{
-			tmp = tmp + document.getElementById((id + "_001")).innerHTML + " ";
+			updateAction();	
 		}
+		else
+		{
+			alert("请选择至少一台需要升级的设备");
+		}
+		
+	}
+	else if ("cancelButton" == btn.id)
+	{
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+	else if ("okButton" == btn.id)
+	{
+		var res;
+
+		document.getElementById("msg_dialog").style.display = "none";
+
+		Cmd = Cmd + '"version":"' + Version + '"}';
+
+		document.getElementById("display").innerHTML = Cmd;
+
+		res = sendHttpReq("post", "db/update_fw_cmd", Cmd);
+
+		alert("发送成功 "+res);
 	}
 
-	document.getElementById("display").innerHTML = tmp;
 }
 
 function checkboxEvt(obj)
@@ -150,7 +184,7 @@ function createDevInfoTable(xObj, evt, slaveDevType)
 	var url = '';
 
 	valueIndex = xObj.id.substring(0, 4) + "001";
-	url = "device_infos/" + document.getElementById(valueIndex).innerHTML + "?slaveDevType=" + slaveDevType;
+	url = "db/device_infos/" + document.getElementById(valueIndex).innerHTML + "?slaveDevType=" + slaveDevType;
 	DeviceInfos = sendHttpReq("get", url, null);
 	DeviceInfos = eval("(" + DeviceInfos + ")");
 
@@ -189,6 +223,10 @@ function createDevInfoTable(xObj, evt, slaveDevType)
 	{
 		alert("no device information");
 	}
+
+	Version = "003";
+	DevInfoCheckboxTrueSum 	= 0;
+	Cmd = "";
 
 }
 
@@ -240,8 +278,7 @@ function createDevTypeTable(params)
 	document.getElementById("dev_type_table").innerHTML = myTable;	
 }	
 
-
-function init()
+function loadDevTypesInfo()
 {
 	var tmp = '[{"deviceType":0,"deviceName":"自控仪"},{"deviceType":100,"deviceName":"物联网现场中间件"},{"deviceType":1,"deviceName":"插秧机"}]';
 	var hostDevSum = 0;
@@ -249,7 +286,7 @@ function init()
 	var hostDeviceTypes = [];
 	var i = 0;
 
-	tmp = sendHttpReq("get", "device_types", null);
+	tmp = sendHttpReq("get", "db/device_types", null);
 
 	tmpObj = eval("("+tmp+")");
 	hostDevSum = tmpObj.length;
@@ -274,7 +311,34 @@ function init()
 	else
 	{
 		alert("no device");
-	}
+	}	
+}
+
+function createMsgDialog(title)
+{
+	var bottom;
+	var right;
+	
+	bottom = document.body.clientHeight / 2 + 50;
+	right = document.body.clientWidth / 2 - 250;
+	
+	document.getElementById("msg_dialog_title").innerHTML = title;
+	document.getElementById('msg_dialog_title').style.background = "#52CCCC";
+
+    document.getElementById('msg_dialog').style.position = "absolute";
+    document.getElementById('msg_dialog').style.background = "#4C6874";
+    document.getElementById('msg_dialog').style.zIndex = "1112"
+    document.getElementById('msg_dialog').style.bottom = bottom + "px";
+    document.getElementById('msg_dialog').style.right = right + "px";
+
+    document.getElementById("msg_dialog").style.display = "none";
+}
+
+function init()
+{
+	loadDevTypesInfo();
+
+	createMsgDialog("请选则一个固件版本");
 }
 
 init();
