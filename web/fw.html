@@ -1,22 +1,27 @@
 <html>
 <head>
 <title>Upload</title>
+<style type="text/css">
+<!--
+.INFO {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 19px;
+}
+-->
+</style>
 </head>
 <body>
  <!-- 用于文件上传的表单元素 --> 
 <table id="fwInfoTable" width="800" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">
     <td width="800" height="100">
         </br>
-        <textarea id="version_note" cols="100" rows="10"></textarea></br>
-        <input type="radio" name="fw_type" onClick="Version='001'" />中间件 
-        <input type="radio" name="fw_type" onClick="Version='002'" />自控仪
-        <input type="radio" name="fw_type" onClick="Version='003'" checked="checked" />插秧机</br>
-         <form name="demoForm" id="demoForm" method="post" enctype="multipart/form-data" 
- action="javascript: uploadAndSubmit();"> 
- <p>Upload File: <input type="file" name="file" /></p> 
- <p><input type="submit" value="Submit" /></p> 
- </form> 
- <div>Progessing (in Bytes): <span id="bytesRead"> 
+        <textarea id="version_note" cols="80" rows="10" class="INFO"></textarea></br></br>
+        服务器固件储存路径:<input id="save_path" value="/home/innotek_ftp/0/"></textarea></br>
+        <form name="demoForm" id="demoForm" method="post" enctype="multipart/form-data" action="javascript: uploadAndSubmit();"> 
+             <p><input type="file" name="file" id="file"/></p> 
+             <p><input type="button" value="Submit" onClick="uploadAndSubmit()"/></p> 
+        </form> 
+ <div>上传进度 (in Bytes): <span id="bytesRead"> 
  </span> / <span id="bytesTotal"></span> 
  </div>
     </td>
@@ -59,14 +64,21 @@ function getChDate()
 
 function uploadAndSubmit()
 { 
-     var form = document.forms["demoForm"]; 
-     var fw_info = '';
-     var date = getChDate();
+    var form = document.forms["demoForm"];
+    var type = 0; 
+    var version = '';
+    var fwName =  document.getElementById("file").value;
+    var tmp = [];
 
-     fw_info = '{"fwType":0' + ',"version":"001"' + ',"info":"' + document.getElementById("version_note").value + '"' + ',"createAt":"' + date + '"}';
+    type = Number(fwName.substring(0, fwName.indexOf('.',0)));
+    version = fwName.substring((fwName.indexOf('.',0) + 1), (fwName.indexOf('.',0) + 4));
 
-     sendHttpReq("post", "/db/fw_info", fw_info);
-        
+    tmp.push(version.substring(0,1));
+    tmp.push(version.substring(1,2));
+    tmp.push(version.substring(2,3)); 
+
+    version = tmp[0] + '.' + tmp[1] + '.' + tmp[2];    
+
      if (form["file"].files.length > 0) 
      { 
          // 寻找表单域中的 <input type="file" ... > 标签
@@ -105,7 +117,7 @@ function uploadAndSubmit()
                     // 构造 XMLHttpRequest 对象，发送文件 Binary 数据
                     var xhr = new XMLHttpRequest(); 
                     xhr.open(/* method */ "POST", 
-                    /* target url */ "fw/" + file.name 
+                    /* target url */ "fw/" + file.name + "?savePath=" + document.getElementById("save_path").value
                     /*, async, default to true */); 
                     
                     xhr.overrideMimeType("application/octet-stream"); 
@@ -117,8 +129,20 @@ function uploadAndSubmit()
                          { 
                              if (xhr.status == 200) 
                              { 
-                                 console.log("upload complete"); 
-                                 console.log("response: " + xhr.responseText); 
+                                 var fw_info    = '';
+                                 var date       = getChDate();
+                                 var res        = ''
+
+                                 fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fwSize":' + file.size + ',"createAt":"' + date + '"}';
+
+                                 res = sendHttpReq("post", "/db/fw_info", fw_info);
+
+                                 alert("保存"+res);
+        
+                             }
+                             else
+                             {
+                                alert("保存失败");
                              } 
                          } 
                     } 
@@ -129,7 +153,7 @@ function uploadAndSubmit()
      } //-- if (form["file"].files.length > 0)  --//
      else 
      { 
-        alert ("Please choose a file."); 
+        alert ("请选则一个固件"); 
      } 
 }
 

@@ -5,27 +5,19 @@
 <link rel="stylesheet" href="../js/dist/themes/default/style.min.css" />
 </head>
 <body>
-
-</br>
-</br>
-<div id="dev_info_table">
-<input name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="增加设备类型" />
-<input name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删除设备类型" />
-<div id="dev_type_table"></div>
+<div>
+<input name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="添加" />
+<input name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删除" /></br></br>
+<div id="display_table"></div>
 </div>
 
 <div id="msg_dialog">
 	<div id="msg_dialog_title"></div></br>
-	<table id="version_table" width="500">
-		<input type="radio" name="version" onClick="Version='001'" />0.0.1 
-		<input type="radio" name="version" onClick="Version='002'" />0.0.2
-		<input type="radio" name="version" onClick="Version='003'" checked="checked" />0.0.3
-		</br>
-		</br>
-	</table>
+	<div id="msg_dialog_content">
+	</div>
 	<div align="right">
-		<input name="okButton" type="button" id="okButton" onClick="buttonEvt(this)" value="确定" />
-		<input name="cancelButton" type="button" id="cancelButton" onClick="buttonEvt(this)" value="取消" />
+		<input name="okButton" type="button" id="msg_dialog_okButton" onClick="buttonEvt(this)" value="确定" />
+		<input name="cancelButton" type="button" id="msg_dialog_cancelButton" onClick="buttonEvt(this)" value="取消" />
 	</div>
 </div>
 
@@ -35,12 +27,48 @@
 <script type="text/javascript">
 
 ///*
-var DeviceInfos;
-var Version = "003";
-var DevInfoCheckboxTrueSum 	= 0;
-var Cmd 					= 0;
+var DeviceInfos 			= [];
+var Version 				= "003";
+var DevInfoCheckboxTrueSum 	= 0;  //-- the number of device you choice! --//
+var Cmd 					= 0;  //-- update fw cmd --//
+var CurDisplayTableAttr 	= -1; //-- -1:device type, ohter value:device information and the value is device type --//
+var IsAdd 					= 0;  //-- device type or device information add or delete --//
+var PreTableParam			= {}; //-- save pre table params --//
 
-function updateAction()
+function getChDate()
+{
+    var date = new Date();
+    var tmp = '0000';
+    var chDate = '';
+    
+    tmp = tmp + date.getFullYear();
+    tmp = tmp.substring((tmp.length - 4)) + "年";
+    chDate = tmp;
+    tmp = "00";
+    tmp = tmp + (date.getMonth() + 1);
+    tmp = tmp.substring((tmp.length - 2)) + "月";
+    chDate = chDate + tmp;
+    tmp = "00";
+    tmp = tmp + (date.getDate());
+    tmp = tmp.substring((tmp.length - 2)) + "日 ";
+    chDate = chDate + tmp;
+    tmp = "00";
+    tmp = tmp + (date.getHours());
+    tmp = tmp.substring((tmp.length - 2)) + ":";
+    chDate = chDate + tmp;
+    tmp = "00";
+    tmp = tmp + (date.getMinutes());
+    tmp = tmp.substring((tmp.length - 2)) + " ";
+    chDate = chDate + tmp;      
+    tmp = "00";
+    tmp = tmp + (date.getSeconds());
+    tmp = tmp.substring((tmp.length - 2));
+    chDate = chDate + tmp;  
+    
+    return chDate;  
+}
+
+function readUpdateInfo()
 {
 	var i 			= 0;
 	var slaveId 	= [];
@@ -65,10 +93,167 @@ function updateAction()
 	}
 
 	Cmd = Cmd + slaveId + '],';
+}
 
-	document.getElementById("msg_dialog").style.display = "block";
+function setItem(opt)
+{
+	var htmls = '';
+	var title = '';
 
-	document.getElementById("display").innerHTML = Cmd;
+	IsAdd = opt;
+
+	if (-1 != CurDisplayTableAttr) //-- device information --//
+	{
+		htmls = '<table width="500">\
+			设备ID&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp:<input type="text" id="dev_id" /></br></br>\
+			设备所在地:<input type="text" id="dev_address_name" /></br></br>\
+			从机类型&nbsp&nbsp&nbsp:<input type="text" id="slave_dev_type" value="null"/></br></br>\
+			</br>\
+			</br>\
+		</table>';
+
+		title = opt ? "增加一个设备" : "删除一个设备";
+
+		createMsgDialog({title:title, content:htmls, display:"block"}, setDevInfo);
+
+	}
+	else if (-1 == CurDisplayTableAttr)//-- device type --//
+	{
+		htmls = '<table width="500">\
+			设备名称:<input type="text" id="dev_name" /></br></br>\
+			设备类型:<input type="text" id="dev_type" /></br></br>\
+			<input type="checkbox", id="is_host" checked="checked">Host\
+			</br>\
+			</br>\
+		</table>';
+
+		title = opt ? "增加一个设备类型" : "删除一个设备类型";
+
+		createMsgDialog({title:title, content:htmls, display:"block"}, setDevType);
+
+	}
+}
+
+function setDevInfo()
+{
+	if ("msg_dialog_cancelButton" == this.id)
+	{
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+	else if ("msg_dialog_okButton" == this.id)
+	{
+		var res;
+		var devInfo;
+		var hostId;
+
+		hostId = document.getElementById("host_id").innerHTML;
+		hostId = hostId.substring(8);
+
+		devInfo = '{"isAdd":' + IsAdd + ',' + ' "data":{"myDeviceType":' + CurDisplayTableAttr + ',' +
+				   '"addressName":"' + document.getElementById("dev_address_name").value + '",' +
+				   '"myId":"' + document.getElementById("dev_id").value + '",'+
+				   '"slaveDeviceType":' + document.getElementById('slave_dev_type').value + ',' +
+				   '"hostId":"' + hostId + '",' +
+				   '"version":"0.0.0",' +
+				   '"updateAt":"' + getChDate() + '"' +
+					  '}}';		
+
+		res = sendHttpReq("post", "db/device_infos", devInfo);
+		alert(res);
+
+		document.getElementById("msg_dialog").style.display = "none";
+	}	
+}
+
+function setDevType(isAdd)
+{
+	if ("msg_dialog_cancelButton" == this.id)
+	{
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+	else if ("msg_dialog_okButton" == this.id)
+	{
+		var res;
+		var devTypeInfo;
+
+		devTypeInfo = '{"isAdd":' + IsAdd + ',' + '"data":{"deviceType":' + document.getElementById("dev_type").value + ',' +
+					  '"deviceName":"' + document.getElementById("dev_name").value + '",' +
+					  '"isHost":' + document.getElementById("is_host").checked + '}}';		
+
+		res = sendHttpReq("post", "db/device_types", devTypeInfo);
+
+		alert(res);
+
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+}
+
+function uploadUpdateFwCmd()
+{
+	var res;
+
+	if ("msg_dialog_cancelButton" == this.id)
+	{
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+	else if ("msg_dialog_okButton" == this.id)
+	{
+		Cmd = Cmd + '"version":"' + Version + '"}';
+
+		res = sendHttpReq("post", "db/update_fw_cmd", Cmd);
+
+		alert("发送"+res);
+
+		document.getElementById("msg_dialog").style.display = "none";
+	}
+}
+
+function getFwVersion()
+{
+	var res;
+	var verInfo;
+	var htmls 	= '';
+	var highVer 	= "000";
+
+	readUpdateInfo();
+
+	res = sendHttpReq("get", ("db/fw_infos/" + CurDisplayTableAttr), null);
+	verInfo = eval("(" + res + ")");
+
+	if (0 < verInfo.length)
+	{
+
+		htmls = '<table id="version_table" width="500">';
+
+		for (var i = 0; i < verInfo.length; ++i)
+		{
+			var ver = "000";
+			var tmp = 0;
+			
+			ver = verInfo[i]["version"];
+			tmp = ver.replace(/[.]/ig, '');
+
+			if (Number(tmp) > Number(highVer))
+			{
+				highVer = tmp;
+			}
+
+			htmls = htmls + '<input type="radio" name="version" id="version_' + tmp + '"' + ' onClick="Version=\'' + tmp + '\'"/>' + ver;
+		}
+
+		highVer = 'version_' + highVer;
+		
+		htmls = htmls + '</br></br></table>';
+
+		createMsgDialog({title:"请选则一个固件版本", content: htmls, display:"block"}, uploadUpdateFwCmd);		
+
+		document.getElementById(highVer).checked = true;
+			
+	}
+	else
+	{
+		alert((CurDisplayTableAttr + "类型固件版本不存在"));
+	}	
 }
 
 function buttonEvt(btn)
@@ -76,51 +261,28 @@ function buttonEvt(btn)
 
 	if ("addButton" == btn.id)
 	{
-		document.getElementById("display").innerHTML = "block dialog";
-		document.getElementById("display").style.display = "block";
+		setItem(1);
 	}
 	else if ("delButton" == btn.id)
 	{
-		alert("delButton");
+		setItem(0);	
 	}
 	else if ("updateButton" == btn.id)
 	{
 		if (0 < DevInfoCheckboxTrueSum)
 		{
-			updateAction();	
+			getFwVersion();			
 		}
 		else
 		{
 			alert("请选择至少一台需要升级的设备");
-		}
-		
+		}		
 	}
-	else if ("cancelButton" == btn.id)
-	{
-		document.getElementById("msg_dialog").style.display = "none";
-	}
-	else if ("okButton" == btn.id)
-	{
-		var res;
-
-		document.getElementById("msg_dialog").style.display = "none";
-
-		Cmd = Cmd + '"version":"' + Version + '"}';
-
-		document.getElementById("display").innerHTML = Cmd;
-
-		res = sendHttpReq("post", "db/update_fw_cmd", Cmd);
-
-		alert("发送成功 "+res);
-	}
-
 }
 
 function checkboxEvt(obj)
 {
 	var i = 0;
-
-	document.getElementById("display").innerHTML = obj.id;
 
 	if ("dev_info_checkbox_all" == obj.id)
 	{
@@ -158,24 +320,22 @@ function checkboxEvt(obj)
 			DevInfoCheckboxTrueSum--;
 		}
 	}
-
-	document.getElementById("display").innerHTML = DevInfoCheckboxTrueSum;
 }
 
-function createDevInfoTable(xObj, evt, slaveDevType)
+function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 {
-	var infoTable = '<table id="infoTable" width="1070" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">';
-	var tableHeader = '<tr>' +
-						'<td>&nbsp</td>' +
-						'<td id="host_id"></td>' +
-						'<td>&nbsp</td>' +
-						'<td><input name="updateButton" type="button" id="updateButton" onClick="buttonEvt(this)" value="升级固件" /></td>' +
+	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
+	var tableHeader = '<tr  height="50">' +
+						'<td >&nbsp</td>' +
+						'<td  id="host_id">&nbsp</td>' +
+						'<td >&nbsp</td>' +
+						'<td ><input name="updateButton" type="button" id="updateButton" onClick="buttonEvt(this)" value="升级固件" /></td>' +
 					 '</tr>' +
-					 '<tr>' +
-						'<td><input id="dev_info_checkbox_all" type="checkbox" onClick="checkboxEvt(this)"></td>' +
-						'<td>ID:</td>' +
-						'<td>Address:</td>' +
-						'<td>Version:</td>' +
+					 '<tr height="50">' +
+						'<td ><input id="dev_info_checkbox_all" type="checkbox" onClick="checkboxEvt(this)"></td>' +
+						'<td >ID:</td>' +
+						'<td >Address:</td>' +
+						'<td >Version:</td>' +
 					 '</tr>';
 	var tableHeaderSum = 0;
 	var myTable = '';
@@ -188,41 +348,43 @@ function createDevInfoTable(xObj, evt, slaveDevType)
 	DeviceInfos = sendHttpReq("get", url, null);
 	DeviceInfos = eval("(" + DeviceInfos + ")");
 
+	myTable = infoTable + tableHeader;
+
 	if (0 != DeviceInfos.length)
 	{
-		myTable = infoTable + tableHeader;
-
 		for (i = 0; i < DeviceInfos.length; ++i)
 		{
 			var htmls 	= '';
 			var rowNum 	= "000";
 			var id 		= "000_000";
+			var tmp 	= '';
+
+			//tmp = 
 			
 			rowNum = rowNum + i;
 			rowNum = rowNum.substring((rowNum.length - 3));
 
 			id = rowNum + "_000";
-			htmls = '<tr>' + 
+			htmls = '<tr  height="50">' + 
 					'<td id="' + id + '"><input id="dev_info_checkbox_' + rowNum + '" type="checkbox" onClick="checkboxEvt(this)"></td>';
 			id = rowNum + "_001";
-			htmls = htmls + '<td id="' + id + '" onClick="createDevInfoTable(this, arguments[0], ' + DeviceInfos[i]["slaveDeviceType"] + ')">' + DeviceInfos[i]["myId"] + '</td>';				
+			htmls = htmls + '<td id="' + id + '" onClick="createDevInfoTable(this, arguments[0], ' + DeviceInfos[i]["myId"] + ',' + DeviceInfos[i]["slaveDeviceType"] + ',' + DeviceInfos[i]["slaveDeviceType"] + ')">' + DeviceInfos[i]["myId"] + '</td>';				
 			id = rowNum + "_002";
-			htmls =  htmls + '<td id="' + id + '">' + DeviceInfos[i]["addressName"] + '</td>';			
+			htmls =  htmls + '<td id="' + id + '">' + DeviceInfos[i]["addressName"] + '</td>';	
+
 			id = rowNum + "_003";
 			htmls = htmls + '<td id="' + id + '">' + DeviceInfos[i]["version"] + '</td>'; 
 			htmls = htmls + '</tr>';
 
 			myTable += htmls;
 
-		}
+		}	
+	}
 
-		document.getElementById("dev_info_table").innerHTML = myTable;	
-		document.getElementById("host_id").innerHTML = "Host ID:" + DeviceInfos[0]["hostId"];		
-	}
-	else
-	{
-		alert("no device information");
-	}
+	document.getElementById("display_table").innerHTML = myTable + '</table>';	
+	document.getElementById("host_id").innerHTML = "Host ID:" + hostId;
+	
+	CurDisplayTableAttr = tableAtrr;
 
 	Version = "003";
 	DevInfoCheckboxTrueSum 	= 0;
@@ -232,8 +394,8 @@ function createDevInfoTable(xObj, evt, slaveDevType)
 
 function createDevTypeTable(params)
 {
-	var infoTable = '<table id="infoTable" width="1070" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">';
-	var tableHeader = '<tr>';
+	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
+	var tableHeader = '<tr height="50">';
 	var tableHeaderSum = 0;
 	var myTable = '';
 	var i = 0;
@@ -252,12 +414,13 @@ function createDevTypeTable(params)
 	{
 		var row = '';
 		var id = "000"; //-- 000_000 --//
+		var clickEvt = ' onClick="createDevInfoTable(this, arguments[0], null, null,' + params.rootNode[i][1] + ' )">';
 		
 		id = id + i;
 		id = id.substring((id.length - 3));
 
-		row = '<tr>' +
-				'<td id="' + id + '_000' + '" onClick="createDevInfoTable(this, arguments[0], null)">' + params.rootNode[i][0] + '</td>';				
+		row = '<tr height="50">' +
+				'<td id="' + id + '_000"' + (params.rootNode[i][params.tableHeader.length] ? clickEvt : '>') + params.rootNode[i][0] + '</td>';				
 		
 		for (var n = 1; n < params.tableHeader.length; ++n)
 		{
@@ -275,7 +438,9 @@ function createDevTypeTable(params)
 
 	}
 	
-	document.getElementById("dev_type_table").innerHTML = myTable;	
+	CurDisplayTableAttr = -1;
+
+	document.getElementById("display_table").innerHTML = myTable + '</table>';	
 }	
 
 function loadDevTypesInfo()
@@ -291,30 +456,25 @@ function loadDevTypesInfo()
 	tmpObj = eval("("+tmp+")");
 	hostDevSum = tmpObj.length;
 
-	if (0 != hostDevSum)
+	for (i = 0; i < hostDevSum; ++i)
 	{
-		for (i = 0; i < hostDevSum; ++i)
-		{
-			var devType;
+		var devType;
 
-			devType = "000" + tmpObj[i]["deviceType"];
-			devType = devType.substring(devType.length - 3);
+		devType = "000" + tmpObj[i]["deviceType"];
+		devType = devType.substring(devType.length - 3);
 
-			hostDeviceTypes.push([
-				tmpObj[i]["deviceName"],
-				devType,
-			]);
-		}
-
-		createDevTypeTable({rootNode:hostDeviceTypes, id:"dev_type_table", tableHeader:["设备类型名称","设备类型编码"]});		
+		hostDeviceTypes.push([
+			tmpObj[i]["deviceName"],
+			devType,
+			tmpObj[i]["isHost"]
+		]);
 	}
-	else
-	{
-		alert("no device");
-	}	
+
+	createDevTypeTable({rootNode:hostDeviceTypes, id:"dev_type_table", tableHeader:["设备类型名称","设备类型编码"]});		
+	
 }
 
-function createMsgDialog(title)
+function createMsgDialog(params, fn)
 {
 	var bottom;
 	var right;
@@ -322,7 +482,9 @@ function createMsgDialog(title)
 	bottom = document.body.clientHeight / 2 + 50;
 	right = document.body.clientWidth / 2 - 250;
 	
-	document.getElementById("msg_dialog_title").innerHTML = title;
+	document.getElementById("msg_dialog_content").innerHTML = params.content;
+
+	document.getElementById("msg_dialog_title").innerHTML = params.title;
 	document.getElementById('msg_dialog_title').style.background = "#52CCCC";
 
     document.getElementById('msg_dialog').style.position = "absolute";
@@ -331,14 +493,17 @@ function createMsgDialog(title)
     document.getElementById('msg_dialog').style.bottom = bottom + "px";
     document.getElementById('msg_dialog').style.right = right + "px";
 
-    document.getElementById("msg_dialog").style.display = "none";
+    document.getElementById("msg_dialog").style.display = params.display;
+
+    document.getElementById("msg_dialog_okButton").onclick = fn;
+    document.getElementById("msg_dialog_cancelButton").onclick = fn;
 }
 
 function init()
 {
 	loadDevTypesInfo();
 
-	createMsgDialog("请选则一个固件版本");
+	createMsgDialog({title:"none", display:"none"});
 }
 
 init();
