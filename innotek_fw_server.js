@@ -5,6 +5,7 @@ var DevInfo 	= require('./node_modules/db/schemas/dev_info');
 var RemoteCmd 	= require('./node_modules/remote_cmd/remote_cmd');
 var Command 	= require('./node_modules/db/schemas/command');
 var FwInfo 		= require('./node_modules/db/schemas/fw_info');
+var WebFile 	= require('./node_modules/web_file/web_file');
 
 var httpServer = restify.createServer({
 	
@@ -28,109 +29,78 @@ httpServer.use(restify.bodyParser());
 
 httpServer.get('/', function(req, res, next){
 
-	fs.readFile("./web/index.html", function(err, data){
-	
-		if (err)
-		{
-			console.error(err);			
-			return;
-		}
-		
-		res.setHeader('Content-Type', 'text/html');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
+	WebFile.sendWebFile("./web/index.html", res, next);
 });
 
 httpServer.get('/imgs/favicon.ico', function(req, res, next){
 
-	fs.readFile("./public/imgs/favicon.ico", function(err, data){
-	
-		if (err)
-		{
-			console.error(err);			
-			return;
-		}
-		
-		res.setHeader('Content-Type', 'text/html');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
+	WebFile.sendWebFile("./public/imgs/favicon.ico", res, next);
+});
+
+httpServer.get('/imgs/back.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/back.gif", res, next);
+});
+
+httpServer.get('/imgs/index_01.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_01.gif", res, next);
+});
+
+httpServer.get('/imgs/index_02.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_02.gif", res, next);
+});
+
+httpServer.get('/imgs/index_03.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_03.gif", res, next);
+});
+
+httpServer.get('/imgs/index_05.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_05.gif", res, next);
+});
+
+httpServer.get('/imgs/index_06.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_06.gif", res, next);
+});
+
+httpServer.get('/imgs/index_07.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/index_07.gif", res, next);
+});
+
+httpServer.get('/imgs/spacer.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/spacer.gif", res, next);
 });
 
 httpServer.get('/top.html', function(req, res, next){
 
-		fs.readFile("./web/top.html", function(err, data){
-	
-		if (err)
-		{
-			console.error(err);			
-			return;
-		}
-		
-		res.setHeader('Content-Type', 'text/html');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
+	WebFile.sendWebFile("./web/top.html", res, next);
 });
 
 httpServer.get('/device.html', function(req, res, next){
 
-		fs.readFile("./web/device.html", function(err, data){
-	
-		if (err)
-		{
-			console.error(err);			
-			return;
-		}
-		
-		res.setHeader('Content-Type', 'text/html');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
+	WebFile.sendWebFile("./web/device.html",res, next);
 });
 
-httpServer.get('/fw.html', function(req, res, next){
+httpServer.get('/upload.html', function(req, res, next){
 
-		fs.readFile("./web/fw.html", function(err, data){
-	
-		if (err)
-		{
-			console.error(err);			
-			return;
-		}
-		
-		res.setHeader('Content-Type', 'text/html');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
+	WebFile.sendWebFile("./web/upload.html", res, next);
+});
+
+httpServer.get('/search.html', function(req, res, next){
+
+	WebFile.sendWebFile("./web/search.html", res, next);
 });
 
 httpServer.get('/js/my_http.js', function(req, res, next){
 
-		fs.readFile("./public/js/my_http.js", function(err, data){
+	WebFile.sendWebFile("./public/js/my_http.js", res, next);
 	
-		if (err)
-		{
-			console.error(err);			
-		}
-		
-		res.setHeader('Content-Type', 'text/js');
-		res.writeHead(200);
-		res.write(data);
-		res.end();
-		next();
-	});
 });
 
 httpServer.get('/db/device_types', function(req, res, next){
@@ -167,43 +137,58 @@ httpServer.post('/db/update_fw_cmd', function(req, res, next){
 
 	var cmd;
 	var json = JSON.parse(req.body);
+	var ver;
 
 	console.log(json);	
 
-	if ("null" === json.hostId) //-- update host device --//
-	{
-		var midAddress = "";
+	FwInfo.FwInfo.findOne({fwType:json.fwType,  version:json.version}, function(err, data){
 
-		for(var i = 0; i < (json.slaveId.length - 1); ++i)
+		if (err)
 		{
-			
-			midAddress = json.slaveId[i];
-
-			cmd = RemoteCmd.makeFwUpdateCmd(midAddress, [65535], 6888, json.version, json.fwType);
-
-			console.log(cmd);
-
-			//--- add command queue ---//
-			Command.addCommand({midAddress:midAddress, address:midAddress}, 
-				{midAddress:midAddress, address:midAddress, infoType:4, command:cmd}, res, 0);
+			res.writeHead(404);
+			res.write("失败");
+			res.end()
 		}
+		else
+		{
+			console.log(data);
+			if ("null" === json.hostId) //-- update host device --//
+			{
+				var midAddress = "";
+				var i = 0;
 
-		midAddress = json.slaveId[i];
+				for(i = 0; i < (json.slaveId.length - 1); ++i)
+				{
+					
+					midAddress = json.slaveId[i];
 
-		Command.addCommand({midAddress:midAddress, address:midAddress}, 
-			{midAddress:midAddress, address:midAddress, infoType:4, command:cmd}, res, 1);
-	}
-	else	//-- update slave device --//
-	{
-		cmd = RemoteCmd.makeFwUpdateCmd(json.hostId, json.slaveId, 6888, json.version, json.fwType);
+					cmd = RemoteCmd.makeFwUpdateCmd(midAddress, [65535], data.fwSize, json.version, json.fwType);
+					console.log(cmd);
 
-		console.log(cmd);
+					//--- add command queue ---//
+					Command.addCommand({midAddress:midAddress, address:midAddress}, 
+						{midAddress:midAddress, address:midAddress, infoType:4, command:cmd}, res, 0);
+				}
 
-		//--- add command queue ---//
-		Command.addCommand({midAddress:json.hostId, address:json.hostId}, 
-			{midAddress:json.hostId, address:json.hostId, infoType:4, command:cmd}, res, 1);	
-	}
+				midAddress = json.slaveId[i];
 
+				cmd = RemoteCmd.makeFwUpdateCmd(midAddress, [65535], data.fwSize, json.version, json.fwType);
+				console.log(cmd);
+
+				Command.addCommand({midAddress:midAddress, address:midAddress}, 
+					{midAddress:midAddress, address:midAddress, infoType:4, command:cmd}, res, 1);
+			}
+			else	//-- update slave device --//
+			{
+				cmd = RemoteCmd.makeFwUpdateCmd(json.hostId, json.slaveId, data.fwSize, json.version, json.fwType);
+				console.log(cmd);
+
+				//--- add command queue ---//
+				Command.addCommand({midAddress:json.hostId, address:json.hostId}, 
+					{midAddress:json.hostId, address:json.hostId, infoType:4, command:cmd}, res, 1);	
+			}
+		}
+	});
 
 });
 

@@ -8,23 +8,34 @@
     font-size: 19px;
 }
 -->
+BODY {
+background: url('imgs/index_07.gif') repeat-y;
+
+}
 </style>
 </head>
 <body>
- <!-- 用于文件上传的表单元素 --> 
-<table id="fwInfoTable" width="800" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">
-    <td width="800" height="100">
-        </br>
-        <textarea id="version_note" cols="80" rows="10" class="INFO"></textarea></br></br>
-        服务器固件储存路径:<input id="save_path" value="/home/innotek_ftp/0/"></textarea></br>
-        <form name="demoForm" id="demoForm" method="post" enctype="multipart/form-data" action="javascript: uploadAndSubmit();"> 
-             <p><input type="file" name="file" id="file"/></p> 
-             <p><input type="button" value="Submit" onClick="uploadAndSubmit()"/></p> 
-        </form> 
- <div>上传进度 (in Bytes): <span id="bytesRead"> 
- </span> / <span id="bytesTotal"></span> 
- </div>
-    </td>
+<table>
+    <tr>
+        <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+        <td>
+             <!-- 用于文件上传的表单元素 --> 
+            <table id="fwInfoTable" width="800" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">
+                <td width="800" height="100">
+                    版本描述:</br>
+                    <textarea id="version_note" cols="80" rows="10" class="INFO"></textarea></br></br>
+                    服务器固件储存路径:<input id="save_path" value="/home/innotek_ftp/0/"></textarea></br>
+                    <form name="demoForm" id="demoForm" method="post" enctype="multipart/form-data" action="javascript: uploadAndSubmit();"> 
+                         <p><input type="file" name="file" id="file"/></p> 
+                         <p><input type="button" value="Submit" onClick="uploadAndSubmit()"/></p> 
+                    </form> 
+                    <div>上传进度 (in Bytes): <span id="bytesRead"> 
+                    </span> / <span id="bytesTotal"></span> 
+                    </div>
+                </td>
+            </table>
+        </td>
+    </tr>
 </table>
 <script src="js/my_http.js"></script>
 <script type="text/javascript">
@@ -68,16 +79,9 @@ function uploadAndSubmit()
     var type = 0; 
     var version = '';
     var fwName =  document.getElementById("file").value;
-    var tmp = [];
 
     type = Number(fwName.substring(0, fwName.indexOf('.',0)));
     version = fwName.substring((fwName.indexOf('.',0) + 1), (fwName.indexOf('.',0) + 4));
-
-    tmp.push(version.substring(0,1));
-    tmp.push(version.substring(1,2));
-    tmp.push(version.substring(2,3)); 
-
-    version = tmp[0] + '.' + tmp[1] + '.' + tmp[2];    
 
      if (form["file"].files.length > 0) 
      { 
@@ -137,12 +141,12 @@ function uploadAndSubmit()
 
                                  res = sendHttpReq("post", "/db/fw_info", fw_info);
 
-                                 alert("保存"+res);
+                                 alert("上传"+res);
         
                              }
                              else
                              {
-                                alert("保存失败");
+                                alert("上传失败");
                              } 
                          } 
                     } 

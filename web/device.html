@@ -2,38 +2,49 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Language" content="zh-cn" />
-<link rel="stylesheet" href="../js/dist/themes/default/style.min.css" />
+<style>
+BODY {
+background: url('imgs/index_07.gif') repeat-y;
+
+}
+</style>
 </head>
 <body>
-<div>
-<input name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="添加" />
-<input name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删除" /></br></br>
-<div id="display_table"></div>
-</div>
+<table>
+	<tr>
+		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+		<td>
+			<div>
+				<input name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="添加" />
+				<input name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删除" /></br></br>
+				<div id="display_table"></div>
+			</div>
 
-<div id="msg_dialog">
-	<div id="msg_dialog_title"></div></br>
-	<div id="msg_dialog_content">
-	</div>
-	<div align="right">
-		<input name="okButton" type="button" id="msg_dialog_okButton" onClick="buttonEvt(this)" value="确定" />
-		<input name="cancelButton" type="button" id="msg_dialog_cancelButton" onClick="buttonEvt(this)" value="取消" />
-	</div>
-</div>
+			<div id="msg_dialog">
+				<div id="msg_dialog_title"></div></br>
+				<div id="msg_dialog_content">
+				</div>
+				<div align="right">
+					<input name="okButton" type="button" id="msg_dialog_okButton" onClick="buttonEvt(this)" value="确定" />
+					<input name="cancelButton" type="button" id="msg_dialog_cancelButton" onClick="buttonEvt(this)" value="取消" />
+				</div>
+			</div>
 
-<div id="display"></div>
-
+			<div id="display"></div>
+		</td>
+	</tr>
+</table>
 <script src="js/my_http.js"></script>
 <script type="text/javascript">
 
 ///*
 var DeviceInfos 			= [];
-var Version 				= "003";
+var Version 				= "000";
 var DevInfoCheckboxTrueSum 	= 0;  //-- the number of device you choice! --//
 var Cmd 					= 0;  //-- update fw cmd --//
 var CurDisplayTableAttr 	= -1; //-- -1:device type, ohter value:device information and the value is device type --//
 var IsAdd 					= 0;  //-- device type or device information add or delete --//
-var PreTableParam			= {}; //-- save pre table params --//
+var DrawDevInfoTableParam   = [];
 
 function getChDate()
 {
@@ -154,7 +165,7 @@ function setDevInfo()
 				   '"myId":"' + document.getElementById("dev_id").value + '",'+
 				   '"slaveDeviceType":' + document.getElementById('slave_dev_type').value + ',' +
 				   '"hostId":"' + hostId + '",' +
-				   '"version":"0.0.0",' +
+				   '"version":"000",' +
 				   '"updateAt":"' + getChDate() + '"' +
 					  '}}';		
 
@@ -162,6 +173,8 @@ function setDevInfo()
 		alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
+
+		drawDevInfoTable(DrawDevInfoTableParam[0], DrawDevInfoTableParam[1], DrawDevInfoTableParam[2], DrawDevInfoTableParam[3]);
 	}	
 }
 
@@ -176,7 +189,7 @@ function setDevType(isAdd)
 		var res;
 		var devTypeInfo;
 
-		devTypeInfo = '{"isAdd":' + IsAdd + ',' + '"data":{"deviceType":' + document.getElementById("dev_type").value + ',' +
+		devTypeInfo = '{"isAdd":' + IsAdd + ',' + '"data":{"deviceType":' + Number(document.getElementById("dev_type").value) + ',' +
 					  '"deviceName":"' + document.getElementById("dev_name").value + '",' +
 					  '"isHost":' + document.getElementById("is_host").checked + '}}';		
 
@@ -185,6 +198,9 @@ function setDevType(isAdd)
 		alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
+
+		loadDevTypesInfo();
+
 	}
 }
 
@@ -231,23 +247,24 @@ function getFwVersion()
 			var tmp = 0;
 			
 			ver = verInfo[i]["version"];
-			tmp = ver.replace(/[.]/ig, '');
+			tmp = ver.substring(0, 1) + '.' + ver.substring(1, 2) + '.' + ver.substring(2, 3);
 
-			if (Number(tmp) > Number(highVer))
+			if (Number(ver) > Number(highVer))
 			{
-				highVer = tmp;
+				highVer = ver;
 			}
 
-			htmls = htmls + '<input type="radio" name="version" id="version_' + tmp + '"' + ' onClick="Version=\'' + tmp + '\'"/>' + ver;
+			htmls = htmls + '<input type="radio" name="version" id="version_' + ver + '"' + ' onClick="Version=\'' + ver + '\'"/>' + tmp;
 		}
 
-		highVer = 'version_' + highVer;
+		tmp = 'version_' + highVer;
 		
 		htmls = htmls + '</br></br></table>';
 
 		createMsgDialog({title:"请选则一个固件版本", content: htmls, display:"block"}, uploadUpdateFwCmd);		
 
-		document.getElementById(highVer).checked = true;
+		document.getElementById(tmp).checked = true;
+		Version = highVer;
 			
 	}
 	else
@@ -322,7 +339,7 @@ function checkboxEvt(obj)
 	}
 }
 
-function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
+function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr)
 {
 	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
 	var tableHeader = '<tr  height="50">' +
@@ -340,11 +357,9 @@ function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 	var tableHeaderSum = 0;
 	var myTable = '';
 	var i = 0;
-	var valueIndex = 0;
 	var url = '';
 
-	valueIndex = xObj.id.substring(0, 4) + "001";
-	url = "db/device_infos/" + document.getElementById(valueIndex).innerHTML + "?slaveDevType=" + slaveDevType;
+	url = "db/device_infos/" + valueIndex + "?slaveDevType=" + slaveDevType;
 	DeviceInfos = sendHttpReq("get", url, null);
 	DeviceInfos = eval("(" + DeviceInfos + ")");
 
@@ -372,8 +387,11 @@ function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 			id = rowNum + "_002";
 			htmls =  htmls + '<td id="' + id + '">' + DeviceInfos[i]["addressName"] + '</td>';	
 
+			tmp = DeviceInfos[i]["version"];
+			tmp = tmp.substring(0, 1) + '.' + tmp.substring(1, 2) + '.' + tmp.substring(2, 3);
+
 			id = rowNum + "_003";
-			htmls = htmls + '<td id="' + id + '">' + DeviceInfos[i]["version"] + '</td>'; 
+			htmls = htmls + '<td id="' + id + '">' + tmp + '</td>'; 
 			htmls = htmls + '</tr>';
 
 			myTable += htmls;
@@ -386,10 +404,24 @@ function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 	
 	CurDisplayTableAttr = tableAtrr;
 
-	Version = "003";
+	Version = "000";
 	DevInfoCheckboxTrueSum 	= 0;
 	Cmd = "";
+}
 
+function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
+{
+	var valueIndex;
+
+	valueIndex = xObj.id.substring(0, 4) + "001";
+	valueIndex = document.getElementById(valueIndex).innerHTML;
+
+	DrawDevInfoTableParam[0] = valueIndex;
+	DrawDevInfoTableParam[1] = hostId;
+	DrawDevInfoTableParam[2] = slaveDevType;
+	DrawDevInfoTableParam[3] = tableAtrr;
+
+	drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr);
 }
 
 function createDevTypeTable(params)

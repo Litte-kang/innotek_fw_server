@@ -1,0 +1,84 @@
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Language" content="zh-cn" />
+<style>
+BODY {
+background: url('imgs/index_07.gif') repeat-y;
+
+}
+</style>
+</head>
+<body>
+<table width="1070" align="left" cellspacing="0" bordercolor="#000000">
+	<tr>
+		<td>&nbsp&nbsp</td>
+		<td>
+			&nbsp<input type="text" id="fw_type" value="请输入固件类型">
+			<input type="button" value="搜索" id="searchButton" onClick="buttonEvt(this)">
+		</td>
+	</tr>
+</table>
+</br>
+<table>
+	<tr>
+		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+		<td>
+			<div>
+				<table id="search_result" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">
+				</table>
+			</div>
+		</td>
+	</tr>	
+</table>
+
+<script src="js/my_http.js"></script>
+<script type="text/javascript">
+
+function buttonEvt(obj)
+{
+	var type;
+	var res;
+	var htmls = '';
+
+	if ("searchButton" == obj.id)
+	{
+		type = document.getElementById("fw_type").value;
+
+		res = sendHttpReq("get", ("db/fw_infos/" + type), null);
+		res = eval("(" + res + ")");
+
+		if (0 < res.length)
+		{
+			for (var i = 0; i < res.length; ++i)
+			{
+				var info;
+				var ver;
+
+				info = res[i]["info"];
+				if ('' == info)
+				{
+					info='&nbsp no descript information';
+				}
+
+				ver = res[i]["version"];
+				ver = ver.substring(0, 1) + '.' + ver.substring(1, 2) + '.' + ver.substring(2, 3);
+
+				htmls += '<tr>' + 
+						'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td></tr>' +
+						'<tr><td height="100">' + info + '</td></tr>'; 
+			}		
+		}
+		else
+		{
+			alert("无此类固件版本信息");
+		}
+
+		document.getElementById("search_result").innerHTML = htmls;
+
+	}
+}
+</script>
+</body>
+</html>
