@@ -30,7 +30,7 @@ background: url('imgs/index_07.gif') repeat-y;
 				</div>
 			</div>
 
-			<div id="display"></div>
+			<div id="debug"></div>
 		</td>
 	</tr>
 </table>
@@ -45,6 +45,8 @@ var Cmd 					= 0;  //-- update fw cmd --//
 var CurDisplayTableAttr 	= -1; //-- -1:device type, ohter value:device information and the value is device type --//
 var IsAdd 					= 0;  //-- device type or device information add or delete --//
 var DrawDevInfoTableParam   = [];
+var PageLastValue			= [];
+var CurPageIndex			= 0;
 
 function getChDate()
 {
@@ -170,11 +172,13 @@ function setDevInfo()
 					  '}}';		
 
 		res = sendHttpReq("post", "db/device_infos", devInfo);
-		alert(res);
+		//alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
 
-		drawDevInfoTable(DrawDevInfoTableParam[0], DrawDevInfoTableParam[1], DrawDevInfoTableParam[2], DrawDevInfoTableParam[3]);
+		//PageLastValue[CurPageIndex] = document.getElementById("dev_id").value;
+
+		drawDevInfoTable(DrawDevInfoTableParam[0], DrawDevInfoTableParam[1], DrawDevInfoTableParam[2], DrawDevInfoTableParam[3], CurPageIndex);
 	}	
 }
 
@@ -195,11 +199,14 @@ function setDevType(isAdd)
 
 		res = sendHttpReq("post", "db/device_types", devTypeInfo);
 
-		alert(res);
+		//alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
 
-		loadDevTypesInfo();
+		CurPageIndex = 0;
+		PageLastValue = [];
+
+		loadDevTypesInfo(CurPageIndex);
 
 	}
 }
@@ -273,6 +280,74 @@ function getFwVersion()
 	}	
 }
 
+function changePage(flag)
+{
+
+	if (1 == flag)	//-- next --//
+	{
+		++CurPageIndex;
+		
+		if (-1 == CurDisplayTableAttr)
+		{
+			if (CurPageIndex < PageLastValue.length)
+			{
+				loadDevTypesInfo(CurPageIndex);	
+			}
+			else
+			{
+				--CurPageIndex;
+			}
+		}
+		else
+		{
+			if (CurPageIndex < PageLastValue.length)
+			{
+				drawDevInfoTable(DrawDevInfoTableParam[0], 
+								 DrawDevInfoTableParam[1], 
+								 DrawDevInfoTableParam[2], 
+								 DrawDevInfoTableParam[3],
+								 CurPageIndex)
+			}
+			else
+			{
+				--CurPageIndex;
+			}
+		}
+	}
+	else if (-1 == flag)	//-- pre --//
+	{
+		--CurPageIndex;
+
+		if (-1 == CurDisplayTableAttr)
+		{
+			
+			if (0 <= CurPageIndex)
+			{
+				loadDevTypesInfo(CurPageIndex);
+			}
+			else
+			{
+				CurPageIndex = 0;
+			}			
+		}
+		else
+		{
+			if (0 <= CurPageIndex)
+			{
+				drawDevInfoTable(DrawDevInfoTableParam[0], 
+								 DrawDevInfoTableParam[1], 
+								 DrawDevInfoTableParam[2], 
+								 DrawDevInfoTableParam[3],
+								 CurPageIndex)
+			}	
+			else
+			{
+				CurPageIndex = 0;
+			}		
+		}
+	}
+}
+
 function buttonEvt(btn)
 {
 
@@ -294,6 +369,14 @@ function buttonEvt(btn)
 		{
 			alert("请选择至少一台需要升级的设备");
 		}		
+	}
+	else if ("pre_button" == btn.id)
+	{
+		changePage(-1);
+	}
+	else if ("next_button" == btn.id)
+	{
+		changePage(1);
 	}
 }
 
@@ -339,12 +422,12 @@ function checkboxEvt(obj)
 	}
 }
 
-function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr)
+function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, index)
 {
 	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
 	var tableHeader = '<tr  height="50">' +
-						'<td >&nbsp</td>' +
-						'<td  id="host_id">&nbsp</td>' +
+						'<td width="50">&nbsp</td>' +
+						'<td width="300" id="host_id">&nbsp</td>' +
 						'<td >&nbsp</td>' +
 						'<td ><input name="updateButton" type="button" id="updateButton" onClick="buttonEvt(this)" value="升级固件" /></td>' +
 					 '</tr>' +
@@ -354,27 +437,33 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr)
 						'<td >Address:</td>' +
 						'<td >Version:</td>' +
 					 '</tr>';
-	var tableHeaderSum = 0;
-	var myTable = '';
-	var i = 0;
-	var url = '';
+	var tableHeaderSum 	= 0;
+	var myTable 		= '';
+	var i 				= 0;
+	var url				= '';
+	var devInfos;
+	var tmp 			= '';
+	var page 			= 0;
 
-	url = "db/device_infos/" + valueIndex + "?slaveDevType=" + slaveDevType;
-	DeviceInfos = sendHttpReq("get", url, null);
-	DeviceInfos = eval("(" + DeviceInfos + ")");
+	PageLastValue[0] = '0';
+
+	url = "db/device_infos/" + valueIndex + "?slaveDevType=" + slaveDevType + "&myId=" + PageLastValue[index];
+	devInfos = sendHttpReq("get", url, null);
+	devInfos = eval("(" + devInfos + ")");
 
 	myTable = infoTable + tableHeader;
 
-	if (0 != DeviceInfos.length)
+	if (0 < devInfos.length)
 	{
+		DeviceInfos = devInfos;
+
+		PageLastValue[index + 1] = DeviceInfos[DeviceInfos.length - 1]["myId"];
+
 		for (i = 0; i < DeviceInfos.length; ++i)
 		{
 			var htmls 	= '';
 			var rowNum 	= "000";
 			var id 		= "000_000";
-			var tmp 	= '';
-
-			//tmp = 
 			
 			rowNum = rowNum + i;
 			rowNum = rowNum.substring((rowNum.length - 3));
@@ -395,9 +484,28 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr)
 			htmls = htmls + '</tr>';
 
 			myTable += htmls;
-
 		}	
+
+		tmp = 0;
 	}
+	else
+	{
+		tmp = 1;
+	}
+	
+	page = CurPageIndex + 1;
+
+	myTable = myTable + 
+		'<tr>' + 
+			'<td>&nbsp</td>' +
+			'<td>'  + 
+				'<input type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
+				' 第 ' + page + ' 页 ' +
+				'<input type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
+			'</td>' +
+			'<td>&nbsp</td>' + 
+			'<td>&nbsp</td>' + 
+		'</tr>';
 
 	document.getElementById("display_table").innerHTML = myTable + '</table>';	
 	document.getElementById("host_id").innerHTML = "Host ID:" + hostId;
@@ -407,6 +515,8 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr)
 	Version = "000";
 	DevInfoCheckboxTrueSum 	= 0;
 	Cmd = "";
+
+	return tmp;
 }
 
 function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
@@ -421,7 +531,10 @@ function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 	DrawDevInfoTableParam[2] = slaveDevType;
 	DrawDevInfoTableParam[3] = tableAtrr;
 
-	drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr);
+	CurPageIndex = 0;
+	PageLastValue = [];
+
+	drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, CurPageIndex);
 }
 
 function createDevTypeTable(params)
@@ -431,6 +544,7 @@ function createDevTypeTable(params)
 	var tableHeaderSum = 0;
 	var myTable = '';
 	var i = 0;
+	var tmp = "000";
 
 	//-- create table header --//
 	for(i = 0; i < params.tableHeader.length; ++i)
@@ -456,8 +570,7 @@ function createDevTypeTable(params)
 		
 		for (var n = 1; n < params.tableHeader.length; ++n)
 		{
-			var tmp = "000";
-
+			tmp = "000";
 			tmp = tmp + n;
 			tmp = tmp.substring(tmp.length - 3);
 			tmp = '_' + tmp;
@@ -472,10 +585,22 @@ function createDevTypeTable(params)
 	
 	CurDisplayTableAttr = -1;
 
+	tmp = CurPageIndex + 1;
+
+	myTable = myTable + 
+		'<tr>' + 
+			'<td>'  + 
+				'<input type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
+				' 第 ' + tmp + ' 页 ' +
+				'<input type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
+			'</td>' +
+			'<td>&nbsp</td>' + 
+		'</tr>';
+
 	document.getElementById("display_table").innerHTML = myTable + '</table>';	
 }	
 
-function loadDevTypesInfo()
+function loadDevTypesInfo(index)
 {
 	var tmp = '[{"deviceType":0,"deviceName":"自控仪"},{"deviceType":100,"deviceName":"物联网现场中间件"},{"deviceType":1,"deviceName":"插秧机"}]';
 	var hostDevSum = 0;
@@ -483,27 +608,41 @@ function loadDevTypesInfo()
 	var hostDeviceTypes = [];
 	var i = 0;
 
-	tmp = sendHttpReq("get", "db/device_types", null);
+	PageLastValue[0] = -1;
+
+	tmp = sendHttpReq("get", ("db/device_types/" + PageLastValue[index]), null);
 
 	tmpObj = eval("("+tmp+")");
 	hostDevSum = tmpObj.length;
 
-	for (i = 0; i < hostDevSum; ++i)
+	if (0 < hostDevSum)
 	{
-		var devType;
+		PageLastValue[index + 1] = tmpObj[hostDevSum - 1]["deviceType"];
 
-		devType = "000" + tmpObj[i]["deviceType"];
-		devType = devType.substring(devType.length - 3);
+		for (i = 0; i < hostDevSum; ++i)
+		{
+			var devType;
 
-		hostDeviceTypes.push([
-			tmpObj[i]["deviceName"],
-			devType,
-			tmpObj[i]["isHost"]
-		]);
+			devType = "000" + tmpObj[i]["deviceType"];
+			devType = devType.substring(devType.length - 3);
+
+			hostDeviceTypes.push([
+				tmpObj[i]["deviceName"],
+				devType,
+				tmpObj[i]["isHost"]
+			]);
+		}
+
+		tmp = 0;
+	}
+	else
+	{
+		tmp = 1;
 	}
 
 	createDevTypeTable({rootNode:hostDeviceTypes, id:"dev_type_table", tableHeader:["设备类型名称","设备类型编码"]});		
 	
+	return tmp;
 }
 
 function createMsgDialog(params, fn)
@@ -533,7 +672,7 @@ function createMsgDialog(params, fn)
 
 function init()
 {
-	loadDevTypesInfo();
+	loadDevTypesInfo(CurPageIndex);
 
 	createMsgDialog({title:"none", display:"none"});
 }

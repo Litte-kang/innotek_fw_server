@@ -1,5 +1,6 @@
 var restify 	= require('restify');
 var fs 			= require('fs');
+//var Buffer		= require('buffer');
 var DevType 	= require('./node_modules/db/schemas/dev_type');
 var DevInfo 	= require('./node_modules/db/schemas/dev_info');
 var RemoteCmd 	= require('./node_modules/remote_cmd/remote_cmd');
@@ -103,23 +104,21 @@ httpServer.get('/js/my_http.js', function(req, res, next){
 	
 });
 
-httpServer.get('/db/device_types', function(req, res, next){
+httpServer.get('/db/device_types/:type', function(req, res, next){
 
-	DevType.getDevTypes(res);
+	DevType.getDevTypes(req.params, res);
 
 });
 
 httpServer.get('/db/device_infos/:index', function(req, res, next){
 
-	DevInfo.getDevInfos(req.params.index, req.params.slaveDevType, res);
+	DevInfo.getDevInfos(req.params, res);
 
 });
 
 httpServer.get('/db/fw_infos/:fwType', function(req, res, next){
 
-	console.log(req.params.fwType);
-
-	FwInfo.getFwInfos(req.params.fwType, res);
+	FwInfo.getFwInfos(req.params, res);
 
 });
 
@@ -192,36 +191,40 @@ httpServer.post('/db/update_fw_cmd', function(req, res, next){
 
 });
 
-httpServer.post("/db/fw_info", function(req, res, next){
-	
-	FwInfo.insertFwInfo(req.body, res);
-});
-
 httpServer.post("/fw/:fwName", function(req, res, next){
 	
-	console.log(req.params);
+	var body = JSON.parse(req.body);
+	var fwData = new Buffer(body.fw, 'base64');
 
-	fs.writeFile((req.params.savePath + req.params.fwName), req.body, function(err){
+	console.log(fwData.length);
+
+	fs.writeFile((req.params.savePath + req.params.fwName), fwData, function(err){
 
 		if (err)
 		{
 			res.writeHead(404);
+			res.end();
 		}
 		else
 		{
-			res.writeHead(200);
+			var fwInfo = 
+			{
+				fwType:body.fwType,
+				version:body.version,
+				info:body.info,
+				fwSize:fwData.length,
+				createAt:body.createAt
+			};
+
+			FwInfo.insertFwInfo(fwInfo, res);
 		}
-		
-		res.end()
 	});
-	
 });
 
 httpServer.listen(4040, function(){
 	
 	console.log(httpServer.name + " " + httpServer.url);
 });
-
 
 
 

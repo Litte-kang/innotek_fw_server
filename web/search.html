@@ -11,7 +11,7 @@ background: url('imgs/index_07.gif') repeat-y;
 </style>
 </head>
 <body>
-<table width="1070" align="left" cellspacing="0" bordercolor="#000000">
+<table width="1070" align="left">
 	<tr>
 		<td>&nbsp&nbsp</td>
 		<td>
@@ -25,59 +25,101 @@ background: url('imgs/index_07.gif') repeat-y;
 	<tr>
 		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
 		<td>
-			<div>
+			<div id="display">
 				<table id="search_result" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">
 				</table>
 			</div>
 		</td>
 	</tr>	
 </table>
-
+<div id="debug"></div>
 <script src="js/my_http.js"></script>
 <script type="text/javascript">
 
-function buttonEvt(obj)
+var VersionArray 		= new Array('000');
+var CurVersionIndex		= 0;
+
+function getFwInfos(index)
 {
 	var type;
 	var res;
 	var htmls = '';
+	var tmp = 0;
 
-	if ("searchButton" == obj.id)
+	type = document.getElementById("fw_type").value;
+
+	res = sendHttpReq("get", ("db/fw_infos/" + type + "?version=" + VersionArray[index]), null);
+	res = eval("(" + res + ")");
+
+	if (0 < res.length)
 	{
-		type = document.getElementById("fw_type").value;
+		VersionArray[index + 1] = res[res.length - 1]["version"];
 
-		res = sendHttpReq("get", ("db/fw_infos/" + type), null);
-		res = eval("(" + res + ")");
-
-		if (0 < res.length)
+		for (var i = 0; i < res.length; ++i)
 		{
-			for (var i = 0; i < res.length; ++i)
+			var info;
+			var ver;
+
+			info = res[i]["info"];
+			if ('' == info)
 			{
-				var info;
-				var ver;
+				info='&nbsp no descript information';
+			}
 
-				info = res[i]["info"];
-				if ('' == info)
-				{
-					info='&nbsp no descript information';
-				}
+			ver = res[i]["version"];
+			ver = ver.substring(0, 1) + '.' + ver.substring(1, 2) + '.' + ver.substring(2, 3);
 
-				ver = res[i]["version"];
-				ver = ver.substring(0, 1) + '.' + ver.substring(1, 2) + '.' + ver.substring(2, 3);
+			htmls += '<tr>' + 
+					'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td></tr>' +
+					'<tr><td height="100">' + info + '</td></tr>'; 
+		}	
 
-				htmls += '<tr>' + 
-						'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td></tr>' +
-						'<tr><td height="100">' + info + '</td></tr>'; 
-			}		
-		}
-		else
-		{
-			alert("无此类固件版本信息");
-		}
+		tmp = CurVersionIndex + 1;
+
+		htmls += '<tr>' + 
+					'<td>' +
+						'<input type="button" id="pre_button" onClick="buttonEvt(this)" value="上一页">' +
+						' 第 ' + tmp + ' 页 ' +
+						'<input type="button" id="next_button" onClick="buttonEvt(this)" value="下一页">' +
+					'</td>' +
+				 '</tr>';
 
 		document.getElementById("search_result").innerHTML = htmls;
 
+		return 0;		
 	}
+	else if (0 == index)
+	{
+		alert("无此类固件版本信息");
+	}
+
+	return 1;
+}
+
+function buttonEvt(obj)
+{
+	if ("searchButton" == obj.id)
+	{
+		CurVersionIndex = 0;
+		getFwInfos(0);
+	}
+	else if ("pre_button" == obj.id)
+	{
+		if(getFwInfos((CurVersionIndex ? --CurVersionIndex : 0)))
+		{
+			CurVersionIndex++;
+		}
+		//document.getElementById("debug").innerHTML = CurVersionIndex + ',' + VersionArray.length;
+	}
+	else if ("next_button" == obj.id)
+	{
+		if (getFwInfos((CurVersionIndex < VersionArray.length ? ++CurVersionIndex : CurVersionIndex)))
+		{
+			CurVersionIndex--;
+		}
+
+		//document.getElementById("debug").innerHTML = CurVersionIndex + ',' + VersionArray.length;
+	}	
 }
 </script>
 </body>

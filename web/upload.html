@@ -1,6 +1,8 @@
 <html>
 <head>
 <title>Upload</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Language" content="zh-cn" />
 <style type="text/css">
 <!--
 .INFO {
@@ -38,7 +40,7 @@ background: url('imgs/index_07.gif') repeat-y;
     </tr>
 </table>
 <script src="js/my_http.js"></script>
-<script type="text/javascript">
+<script type="text/javascript"> 
 
 function getChDate()
 {
@@ -112,7 +114,7 @@ function uploadAndSubmit()
         // 这个事件在读取结束后，无论成功或者失败都会触发
              if (reader.error) 
              { 
-                console.log(reader.error); 
+                alert(reader.error); 
              } 
              else 
              { 
@@ -120,29 +122,24 @@ function uploadAndSubmit()
                     
                     // 构造 XMLHttpRequest 对象，发送文件 Binary 数据
                     var xhr = new XMLHttpRequest(); 
+                    var fw_info    = '';
+                    var date       = getChDate();
+
                     xhr.open(/* method */ "POST", 
                     /* target url */ "fw/" + file.name + "?savePath=" + document.getElementById("save_path").value
                     /*, async, default to true */); 
-                    
-                    xhr.overrideMimeType("application/octet-stream"); 
-                    xhr.sendAsBinary(reader.result); 
-                    
+
+                     fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fw":"' + reader.result + '","createAt":"' + date + '"}';
+
+                    xhr.send(fw_info);
+
                     xhr.onreadystatechange = function(){ 
                     
                          if (xhr.readyState == 4)
                          { 
                              if (xhr.status == 200) 
                              { 
-                                 var fw_info    = '';
-                                 var date       = getChDate();
-                                 var res        = ''
-
-                                 fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fwSize":' + file.size + ',"createAt":"' + date + '"}';
-
-                                 res = sendHttpReq("post", "/db/fw_info", fw_info);
-
-                                 alert("上传"+res);
-        
+                                 alert("上传成功");       
                              }
                              else
                              {
@@ -153,7 +150,7 @@ function uploadAndSubmit()
                 } 
         } 
 
-        reader.readAsBinaryString(file); 
+        reader.readAsText(file);
      } //-- if (form["file"].files.length > 0)  --//
      else 
      { 
