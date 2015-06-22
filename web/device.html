@@ -172,7 +172,7 @@ function setDevInfo()
 					  '}}';		
 
 		res = sendHttpReq("post", "db/device_infos", devInfo);
-		//alert(res);
+		alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
 
@@ -199,7 +199,7 @@ function setDevType(isAdd)
 
 		res = sendHttpReq("post", "db/device_types", devTypeInfo);
 
-		//alert(res);
+		alert(res);
 
 		document.getElementById("msg_dialog").style.display = "none";
 
@@ -508,6 +508,12 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, index)
 		'</tr>';
 
 	document.getElementById("display_table").innerHTML = myTable + '</table>';	
+	
+	if (null != hostId)
+	{
+		hostId = '0000000000' + hostId;
+		hostId = hostId.substring(hostId.length - 10);		
+	}
 	document.getElementById("host_id").innerHTML = "Host ID:" + hostId;
 	
 	CurDisplayTableAttr = tableAtrr;
