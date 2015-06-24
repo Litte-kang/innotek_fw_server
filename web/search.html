@@ -3,30 +3,35 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Language" content="zh-cn" />
+<link rel="stylesheet" href='css/my_style.css' type='text/css'>
 <style>
 BODY {
-background: url('imgs/index_07.gif') repeat-y;
-
+    background: url('imgs/index_07.gif') repeat-y;
+    font-family: "Times New Roman",Times, serif;
+    font-size: 18px;
+    color: #006666;
 }
 </style>
 </head>
 <body>
-<table width="1070" align="left">
-	<tr>
-		<td>&nbsp&nbsp</td>
-		<td>
-			&nbsp<input type="text" id="fw_type" value="请输入固件类型">
-			<input type="button" value="搜索" id="searchButton" onClick="buttonEvt(this)">
-		</td>
-	</tr>
-</table>
-</br>
 <table>
 	<tr>
 		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
 		<td>
-			<div id="display">
-				<table id="search_result" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">
+			<input type="text" id="fw_type" class="INPUT_TXT" value="请输入固件类型">
+		</td>
+		<td>
+			<input class="MYBUTTON" type="button" value="搜  索" id="searchButton" onClick="buttonEvt(this)">
+		</td>
+
+</table>
+<table>
+	<tr>
+		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
+		<td>
+			<div align="left" id="display_table">
+				<table width="1070" border="1" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">
+					<tr></tr>
 				</table>
 			</div>
 		</td>
@@ -43,11 +48,11 @@ function getFwInfos(index)
 {
 	var type;
 	var res;
-	var htmls = '';
+	var htmls = '<table id="search_result" width="1070" border="2" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">';
 	var tmp = 0;
 
 	type = document.getElementById("fw_type").value;
-
+	
 	res = sendHttpReq("get", ("db/fw_infos/" + type + "?version=" + VersionArray[index]), null);
 	res = eval("(" + res + ")");
 
@@ -69,29 +74,31 @@ function getFwInfos(index)
 			ver = res[i]["version"];
 			ver = ver.substring(0, 1) + '.' + ver.substring(1, 2) + '.' + ver.substring(2, 3);
 
-			htmls += '<tr>' + 
-					'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td></tr>' +
-					'<tr><td height="100">' + info + '</td></tr>'; 
-		}	
-
-		tmp = CurVersionIndex + 1;
-
-		htmls += '<tr>' + 
-					'<td>' +
-						'<input type="button" id="pre_button" onClick="buttonEvt(this)" value="上一页">' +
-						' 第 ' + tmp + ' 页 ' +
-						'<input type="button" id="next_button" onClick="buttonEvt(this)" value="下一页">' +
-					'</td>' +
-				 '</tr>';
-
-		document.getElementById("search_result").innerHTML = htmls;
-
-		return 0;		
+			htmls += '<tr bordercolor="#336666">' + 
+						'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td>' + 
+					'</tr>' +
+					'<tr>' + 
+						'<td height="100">' + info + '</td>' + 
+					'</tr>'; 
+		}			
 	}
 	else if (0 == index)
 	{
 		alert("无此类固件版本信息");
 	}
+
+	tmp = CurVersionIndex + 1;
+
+	htmls += '<tr bordercolor="#336666">' + 
+				'<td>' +
+					'<input class="MYBUTTON" type="button" id="pre_button" onClick="buttonEvt(this)" value="上一页"/>' +
+					' 第 ' + tmp + ' 页 ' +
+					'<input class="MYBUTTON" type="button" id="next_button" onClick="buttonEvt(this)" value="下一页"/>' +
+				'</td>' +
+			 '</tr>';
+	htmls += '</table>';
+
+	document.getElementById("display_table").innerHTML = htmls;
 
 	return 1;
 }
@@ -105,20 +112,29 @@ function buttonEvt(obj)
 	}
 	else if ("pre_button" == obj.id)
 	{
-		if(getFwInfos((CurVersionIndex ? --CurVersionIndex : 0)))
+		CurVersionIndex--;
+
+		if (0 <= CurVersionIndex)
 		{
-			CurVersionIndex++;
+			getFwInfos(CurVersionIndex);
 		}
-		//document.getElementById("debug").innerHTML = CurVersionIndex + ',' + VersionArray.length;
+		else
+		{
+			CurVersionIndex = 0;
+		}		
 	}
 	else if ("next_button" == obj.id)
 	{
-		if (getFwInfos((CurVersionIndex < VersionArray.length ? ++CurVersionIndex : CurVersionIndex)))
-		{
-			CurVersionIndex--;
-		}
+		CurVersionIndex++;
 
-		//document.getElementById("debug").innerHTML = CurVersionIndex + ',' + VersionArray.length;
+		if (CurVersionIndex < VersionArray.length)
+		{
+			getFwInfos(CurVersionIndex);	
+		}
+		else
+		{
+			--CurVersionIndex;
+		}
 	}	
 }
 </script>

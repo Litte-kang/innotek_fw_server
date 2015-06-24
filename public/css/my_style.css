@@ -1,1 +1,50 @@
-null
+.MYBUTTON {
+    color: #4C6874;
+    text-align: center;
+    padding-top: 3px;
+    padding-right: 5px;
+    padding-left: 5px;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 16px;
+}
+.INFO {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 14px;
+    width: 800px;
+}
+.INPUT-FILE {
+    display:inline-block;
+    width:100px;
+    height:30px;
+    line-height:30px;
+    background:#FFFFFF;
+    text-align:center;
+    overflow:hidden;
+    position:relative;
+}
+.INPUT-FILE:hover {
+	background:#ccc;
+}
+.INPUT-FILE input {
+	opacity:0;
+	filter:alpha(opacity=0);
+	font-size:100px;
+	position:absolute;
+	top:-3px;
+	right:0;
+}
+.MSG_DAILOG{
+	font-family: "Times New Roman",Times, serif;
+	font-size: 16px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-right: 2px;
+	padding-left: 10px;
+	color: #000000;
+}
+.INPUT_TXT {
+	height: 30px;
+	line-height: 30px;
+	font-family: "Times New Roman", Times, serif;
+	font-size: 16px;
+}

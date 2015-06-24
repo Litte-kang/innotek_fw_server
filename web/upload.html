@@ -3,16 +3,13 @@
 <title>Upload</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Language" content="zh-cn" />
-<style type="text/css">
-<!--
-.INFO {
-    font-family: "Times New Roman", Times, serif;
-    font-size: 19px;
-}
--->
+<link rel="stylesheet" href='css/my_style.css' type='text/css'>
+<style>
 BODY {
-background: url('imgs/index_07.gif') repeat-y;
-
+    background: url('imgs/index_07.gif') repeat-y;
+    font-family: "Times New Roman",Times, serif;
+    font-size: 18px;
+    color: #4C6874;
 }
 </style>
 </head>
@@ -22,25 +19,41 @@ background: url('imgs/index_07.gif') repeat-y;
         <td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
         <td>
              <!-- 用于文件上传的表单元素 --> 
-            <table id="fwInfoTable" width="800" height="50" border="1" align="left" cellspacing="0" bordercolor="#000000">
+            <table id="fwInfoTable" width="800" height="50" border="1" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">
                 <td width="800" height="100">
                     版本描述:</br>
                     <textarea id="version_note" cols="80" rows="10" class="INFO"></textarea></br></br>
-                    服务器固件储存路径:<input id="save_path" value="/home/innotek_ftp/0/"></textarea></br>
+                    固件储存路径 : <input class="INPUT_TXT" id="save_path" value="/home/innotek_ftp/0/"></textarea></br>
                     <form name="demoForm" id="demoForm" method="post" enctype="multipart/form-data" action="javascript: uploadAndSubmit();"> 
-                         <p><input type="file" name="file" id="file"/></p> 
-                         <p><input type="button" value="Submit" onClick="uploadAndSubmit()"/></p> 
-                    </form> 
-                    <div>上传进度 (in Bytes): <span id="bytesRead"> 
-                    </span> / <span id="bytesTotal"></span> 
-                    </div>
+                         <p>
+                            <table>
+                                <tr>
+                                    <td>
+                                   <span class="INPUT-FILE" >
+                                        浏  览...<input type="file" name="file" id="file" onChange="buttonEvt()">
+                                   </span>
+                                   </td>
+                                   <td>
+                                   <input name="text" type="text" class="INPUT_TXT" id="path">
+                                   </td>
+                                </tr>
+                            </table>
+                         </p>
+                        <p><input class="MYBUTTON" type="button" value="      上  传      " onClick="uploadAndSubmit()"/></p> 
+                    </form>                
                 </td>
             </table>
         </td>
     </tr>
 </table>
+<div id="debug"></div>
 <script src="js/my_http.js"></script>
 <script type="text/javascript"> 
+
+function buttonEvt()
+{
+    document.getElementById("path").value = document.getElementById("file").value;
+}
 
 function getChDate()
 {
@@ -77,12 +90,12 @@ function getChDate()
 
 function uploadAndSubmit()
 { 
-    var form = document.forms["demoForm"];
-    var type = 0; 
+    var form    = document.forms["demoForm"];
+    var type    = 0; 
     var version = '';
-    var fwName =  document.getElementById("file").value;
+    var fwName  = document.getElementById("file").value;
 
-    type = Number(fwName.substring(0, fwName.indexOf('.',0)));
+    type = Number(fwName.substring(fwName.indexOf('.',0) - 1, fwName.indexOf('.',0)));
     version = fwName.substring((fwName.indexOf('.',0) + 1), (fwName.indexOf('.',0) + 4));
 
      if (form["file"].files.length > 0) 
@@ -93,20 +106,15 @@ function uploadAndSubmit()
          var reader = new FileReader(); 
 
          reader.onloadstart = function(){ 
-             // 这个事件在读取开始时触发
-             console.log("onloadstart"); 
-             document.getElementById("bytesTotal").textContent = file.size; 
+
          } 
  
          reader.onprogress = function(p){ 
-             // 这个事件在读取进行中定时触发
-             console.log("onprogress"); 
-             document.getElementById("bytesRead").textContent = p.loaded; 
+
          } 
 
          reader.onload = function(){ 
-            // 这个事件在读取成功结束后触发
-            console.log("load complete"); 
+ 
          } 
 
         reader.onloadend = function(){ 
@@ -118,10 +126,9 @@ function uploadAndSubmit()
              } 
              else 
              { 
-                    document.getElementById("bytesRead").textContent = file.size; 
                     
                     // 构造 XMLHttpRequest 对象，发送文件 Binary 数据
-                    var xhr = new XMLHttpRequest(); 
+                    var xhr         = createXmlHttpRequest(); 
                     var fw_info    = '';
                     var date       = getChDate();
 
@@ -129,8 +136,7 @@ function uploadAndSubmit()
                     /* target url */ "fw/" + file.name + "?savePath=" + document.getElementById("save_path").value
                     /*, async, default to true */); 
 
-                     fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fw":"' + reader.result + '","createAt":"' + date + '"}';
-
+                    fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fw":"' + reader.result + '","createAt":"' + date + '"}';
                     xhr.send(fw_info);
 
                     xhr.onreadystatechange = function(){ 

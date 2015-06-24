@@ -2,31 +2,46 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Language" content="zh-cn" />
+<link rel="stylesheet" href='css/my_style.css' type='text/css'>
 <style>
 BODY {
-background: url('imgs/index_07.gif') repeat-y;
-
+    background: url('imgs/index_07.gif') repeat-y;
+    font-family: "Times New Roman",Times, serif;
+    font-size: 18px;
+    color: #006666;
 }
+	.footer{
+		font-family:Arial;
+		font-weight:bold;
+		font-size:12px;
+		color:#F4F4F4;
+		background:#A4A4A4;
+		float:left;
+		width:100%;
+		padding-top:5px;
+		padding-bottom:5px;
+		width:81%;
+		margin-left:30px
+	}
 </style>
 </head>
 <body>
 <table>
-	<tr>
+	<tr bordercolor="#336666">
 		<td>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</td>
 		<td>
 			<div>
-				<input name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="添加" />
-				<input name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删除" /></br></br>
-				<div id="display_table"></div>
+				<input class="MYBUTTON" name="addButton" type="button" id="addButton" onClick="buttonEvt(this)" value="添  加" />
+				<input class="MYBUTTON" name="delButton" type="button" id="delButton" onClick="buttonEvt(this)" value="删  除" />
+				<p><div id="display_table"></div></p>
 			</div>
 
 			<div id="msg_dialog">
-				<div id="msg_dialog_title"></div></br>
-				<div id="msg_dialog_content">
-				</div>
-				<div align="right">
-					<input name="okButton" type="button" id="msg_dialog_okButton" onClick="buttonEvt(this)" value="确定" />
-					<input name="cancelButton" type="button" id="msg_dialog_cancelButton" onClick="buttonEvt(this)" value="取消" />
+				<div class="MSG_DAILOG" id="msg_dialog_title"></div></br>
+				<div class="MSG_DAILOG" id="msg_dialog_content"></div>
+				<div class="MSG_DAILOG" align="right">
+					<input class="MYBUTTON" name="okButton" type="button" id="msg_dialog_okButton" onClick="buttonEvt(this)" value="确定" />
+					<input class="MYBUTTON" name="cancelButton" type="button" id="msg_dialog_cancelButton" onClick="buttonEvt(this)" value="取消" />
 				</div>
 			</div>
 
@@ -118,10 +133,9 @@ function setItem(opt)
 	if (-1 != CurDisplayTableAttr) //-- device information --//
 	{
 		htmls = '<table width="500">\
-			设备ID&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp:<input type="text" id="dev_id" /></br></br>\
-			设备所在地:<input type="text" id="dev_address_name" /></br></br>\
-			从机类型&nbsp&nbsp&nbsp:<input type="text" id="slave_dev_type" value="null"/></br></br>\
-			</br>\
+			设备ID &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp:&nbsp<input class="INPUT_TXT" type="text" id="dev_id" /></br></br>\
+			设备所在地:&nbsp<input class="INPUT_TXT" type="text" id="dev_address_name" /></br></br>\
+			从机类型&nbsp&nbsp&nbsp&nbsp:&nbsp<input class="INPUT_TXT" type="text" id="slave_dev_type" value="null"/></br></br>\
 			</br>\
 		</table>';
 
@@ -133,8 +147,8 @@ function setItem(opt)
 	else if (-1 == CurDisplayTableAttr)//-- device type --//
 	{
 		htmls = '<table width="500">\
-			设备名称:<input type="text" id="dev_name" /></br></br>\
-			设备类型:<input type="text" id="dev_type" /></br></br>\
+			设备名称:&nbsp<input class="INPUT_TXT" type="text" id="dev_name" /></br></br>\
+			设备类型:&nbsp<input class="INPUT_TXT" type="text" id="dev_type" /></br></br>\
 			<input type="checkbox", id="is_host" checked="checked">Host\
 			</br>\
 			</br>\
@@ -424,14 +438,14 @@ function checkboxEvt(obj)
 
 function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, index)
 {
-	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
-	var tableHeader = '<tr  height="50">' +
+	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">';
+	var tableHeader = '<tr  height="50" bordercolor="#336666">' +
 						'<td width="50">&nbsp</td>' +
 						'<td width="300" id="host_id">&nbsp</td>' +
 						'<td >&nbsp</td>' +
-						'<td ><input name="updateButton" type="button" id="updateButton" onClick="buttonEvt(this)" value="升级固件" /></td>' +
+						'<td ><input class="MYBUTTON" name="updateButton" type="button" id="updateButton" onClick="buttonEvt(this)" value="升级固件" /></td>' +
 					 '</tr>' +
-					 '<tr height="50">' +
+					 '<tr height="50" bordercolor="#336666">' +
 						'<td ><input id="dev_info_checkbox_all" type="checkbox" onClick="checkboxEvt(this)"></td>' +
 						'<td >ID:</td>' +
 						'<td >Address:</td>' +
@@ -469,7 +483,7 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, index)
 			rowNum = rowNum.substring((rowNum.length - 3));
 
 			id = rowNum + "_000";
-			htmls = '<tr  height="50">' + 
+			htmls = '<tr  height="50" bordercolor="#336666">' + 
 					'<td id="' + id + '"><input id="dev_info_checkbox_' + rowNum + '" type="checkbox" onClick="checkboxEvt(this)"></td>';
 			id = rowNum + "_001";
 			htmls = htmls + '<td id="' + id + '" onClick="createDevInfoTable(this, arguments[0], ' + DeviceInfos[i]["myId"] + ',' + DeviceInfos[i]["slaveDeviceType"] + ',' + DeviceInfos[i]["slaveDeviceType"] + ')">' + DeviceInfos[i]["myId"] + '</td>';				
@@ -496,12 +510,12 @@ function drawDevInfoTable(valueIndex, hostId, slaveDevType, tableAtrr, index)
 	page = CurPageIndex + 1;
 
 	myTable = myTable + 
-		'<tr>' + 
+		'<tr bordercolor="#336666">' + 
 			'<td>&nbsp</td>' +
 			'<td>'  + 
-				'<input type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
+				'<input class="MYBUTTON" type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
 				' 第 ' + page + ' 页 ' +
-				'<input type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
+				'<input class="MYBUTTON" type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
 			'</td>' +
 			'<td>&nbsp</td>' + 
 			'<td>&nbsp</td>' + 
@@ -545,7 +559,7 @@ function createDevInfoTable(xObj, evt, hostId, slaveDevType, tableAtrr)
 
 function createDevTypeTable(params)
 {
-	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bordercolor="#000000">';
+	var infoTable = '<table id="infoTable" width="1070" border="1" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">';
 	var tableHeader = '<tr height="50">';
 	var tableHeaderSum = 0;
 	var myTable = '';
@@ -571,7 +585,7 @@ function createDevTypeTable(params)
 		id = id + i;
 		id = id.substring((id.length - 3));
 
-		row = '<tr height="50">' +
+		row = '<tr height="50" bordercolor="#336666">' +
 				'<td id="' + id + '_000"' + (params.rootNode[i][params.tableHeader.length] ? clickEvt : '>') + params.rootNode[i][0] + '</td>';				
 		
 		for (var n = 1; n < params.tableHeader.length; ++n)
@@ -594,11 +608,11 @@ function createDevTypeTable(params)
 	tmp = CurPageIndex + 1;
 
 	myTable = myTable + 
-		'<tr>' + 
+		'<tr bordercolor="#336666">' + 
 			'<td>'  + 
-				'<input type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
+				'<input class="MYBUTTON" type="button" id="pre_button" onclick="buttonEvt(this)" value="上一页">' + 
 				' 第 ' + tmp + ' 页 ' +
-				'<input type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
+				'<input class="MYBUTTON" type="button" id="next_button" onclick="buttonEvt(this)" value="下一页">' + 
 			'</td>' +
 			'<td>&nbsp</td>' + 
 		'</tr>';
@@ -686,6 +700,6 @@ function init()
 init();
 
 </script>
-
 </body>
+
 </html>
