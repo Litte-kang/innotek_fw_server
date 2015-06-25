@@ -68,7 +68,7 @@ function getFwInfos(index)
 			info = res[i]["info"];
 			if ('' == info)
 			{
-				info='&nbsp no descript information';
+				info='&nbsp 无描述信息';
 			}
 
 			ver = res[i]["version"];
@@ -78,13 +78,20 @@ function getFwInfos(index)
 						'<td height="50">&nbspVersion: ' + ver + '&nbsp&nbsp&nbsp&nbsp&nbspSize: ' + res[i]["fwSize"] + ' Bytes' + '&nbsp&nbsp&nbsp&nbsp&nbspCreateTime: ' + res[i]["createAt"] + '</td>' + 
 					'</tr>' +
 					'<tr>' + 
-						'<td height="100">' + info + '</td>' + 
+						'<td height="100">' + info.replace(/[&]/ig, '</br>') + '</td>' + 
 					'</tr>'; 
 		}			
 	}
 	else if (0 == index)
 	{
 		alert("无此类固件版本信息");
+		
+		htmls = '<table width="1070" border="1" align="left" cellspacing="0" bgcolor="#DBDBDB" bordercolor="#336666">' +
+					'<tr></tr>' + 
+				'</table>';
+
+		document.getElementById("display_table").innerHTML = htmls;
+		return
 	}
 
 	tmp = CurVersionIndex + 1;

@@ -73,6 +73,16 @@ httpServer.get('/imgs/index_07.gif', function(req, res, next){
 	WebFile.sendWebFile("./public/imgs/index_07.gif", res, next);
 });
 
+httpServer.get('/imgs/preload.gif', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/preload.gif", res, next);
+});
+
+httpServer.get('/imgs/graybg.png', function(req, res, next){
+
+	WebFile.sendWebFile("./public/imgs/graybg.png", res, next);
+});
+
 httpServer.get('/css/my_style.css', function(req, res, next){
 
 	WebFile.sendWebFile("./public/css/my_style.css", res, next);

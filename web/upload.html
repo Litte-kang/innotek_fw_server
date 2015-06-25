@@ -5,11 +5,14 @@
 <meta http-equiv="Content-Language" content="zh-cn" />
 <link rel="stylesheet" href='css/my_style.css' type='text/css'>
 <style>
-BODY {
+BODY { 
     background: url('imgs/index_07.gif') repeat-y;
     font-family: "Times New Roman",Times, serif;
     font-size: 18px;
     color: #4C6874;
+}
+.UPLOAD_MSG {
+    background: url('imgs/graybg.png');
 }
 </style>
 </head>
@@ -30,7 +33,7 @@ BODY {
                                 <tr>
                                     <td>
                                    <span class="INPUT-FILE" >
-                                        浏  览...<input type="file" name="file" id="file" onChange="buttonEvt()">
+                                        浏  览...<input type="file" name="file" id="file" onChange="displayPath()">
                                    </span>
                                    </td>
                                    <td>
@@ -46,11 +49,20 @@ BODY {
         </td>
     </tr>
 </table>
+<div id="msg_dialog">
+    <table class="UPLOAD_MSG" id="msg_dialog_table">
+		<tr>
+			<td>
+                <div align="center" id="msg_dialog_content"><img src="imgs/preload.gif"><p>Uploading</p></div>
+            </td>
+		</tr>
+  </table>
+</div>
 <div id="debug"></div>
 <script src="js/my_http.js"></script>
 <script type="text/javascript"> 
 
-function buttonEvt()
+function displayPath()
 {
     document.getElementById("path").value = document.getElementById("file").value;
 }
@@ -95,7 +107,9 @@ function uploadAndSubmit()
     var version = '';
     var fwName  = document.getElementById("file").value;
 
-    type = Number(fwName.substring(fwName.indexOf('.',0) - 1, fwName.indexOf('.',0)));
+    createMsgDialog({title:"Uploading", display:"block"});
+
+    type = Number(fwName.substring(0, fwName.indexOf('.',0)));
     version = fwName.substring((fwName.indexOf('.',0) + 1), (fwName.indexOf('.',0) + 4));
 
      if (form["file"].files.length > 0) 
@@ -136,13 +150,16 @@ function uploadAndSubmit()
                     /* target url */ "fw/" + file.name + "?savePath=" + document.getElementById("save_path").value
                     /*, async, default to true */); 
 
-                    fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'') + '"' + ',"fw":"' + reader.result + '","createAt":"' + date + '"}';
+                    fw_info = '{"fwType":' + type + ',"version":"' + version + '"' + ',"info":"' + document.getElementById("version_note").value.replace(/[\n]/ig,'&') + '"' + ',"fw":"' + reader.result + '","createAt":"' + date + '"}';
+
                     xhr.send(fw_info);
 
                     xhr.onreadystatechange = function(){ 
                     
                          if (xhr.readyState == 4)
                          { 
+                            createMsgDialog({title:"Uploading", display:"none"});
+                            
                              if (xhr.status == 200) 
                              { 
                                  alert("上传成功");       
@@ -163,6 +180,33 @@ function uploadAndSubmit()
         alert ("请选则一个固件"); 
      } 
 }
+
+function createMsgDialog(params, fn)
+{
+    var top;
+    var right;
+
+    top = document.body.clientHeight / 2 - 100;
+    left = document.body.clientWidth / 2;
+    
+    //document.getElementById("msg_dialog_content").innerHTML = params.title;
+    document.getElementById("msg_dialog_content").style.top = top + 'px';
+    document.getElementById("msg_dialog_content").style.left = left + 'px';
+    document.getElementById('msg_dialog_content').style.position = "absolute";
+    document.getElementById('msg_dialog_content').style.zIndex = "1112"
+
+    document.getElementById('msg_dialog').style.position = "absolute";
+    document.getElementById('msg_dialog').style.zIndex = "1112"
+    document.getElementById('msg_dialog').style.top = 0 + 'px'//bottom + "px";
+    document.getElementById('msg_dialog').style.left = 0 + 'px'//right + "px";
+
+    document.getElementById('msg_dialog_table').style.width = document.body.clientWidth + 'px';
+    document.getElementById('msg_dialog_table').style.height = document.body.clientWidth + 'px';
+
+    document.getElementById("msg_dialog").style.display = params.display;
+}
+
+createMsgDialog({title:"Uploading", display:"none"});
 
 </script>
 
